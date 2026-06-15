@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit, AfterViewInit } from '@angular/core';
 import { setupLocale, surveyLocalization } from 'survey-core';
 import { SurveyCreatorModule } from 'survey-creator-angular';
 import { SurveyCreatorModel } from "survey-creator-core";
@@ -9,9 +9,10 @@ import 'survey-creator-core/survey-creator-core.i18n';
   selector: 'app-root',
   imports: [SurveyCreatorModule],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrls: ['./app.scss']
 })
-export class App {
+export class App implements OnInit, AfterViewInit {
+  private cdr = inject(ChangeDetectorRef);
   surveyCreatorModel?: SurveyCreatorModel;
 
   constructor() {
@@ -20,7 +21,7 @@ export class App {
     surveyLocalization.supportedLocales = ['en', 'de', 'fr', 'es', 'it'];
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     // Init the creator model
     const creator = new SurveyCreatorModel({
       showSurveyHeader: false,
@@ -54,6 +55,13 @@ export class App {
     creator.survey.locale = 'de';
 
     this.surveyCreatorModel = creator;
+    this.cdr.detectChanges();
+  }
+
+  ngAfterViewInit(): void {
+    // Set the default locale to English after rendering
+    surveyLocalization.defaultLocale = 'en';
+    this.cdr.detectChanges();
   }
 
   private setupCustomLocaleAsDefault() {
