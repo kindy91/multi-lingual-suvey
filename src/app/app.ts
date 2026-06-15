@@ -15,7 +15,7 @@ export class App {
   surveyCreatorModel?: SurveyCreatorModel;
   ngOnInit() {
     surveyLocalization.defaultLocale = 'en';
-    surveyLocalization.supportedLocales = ['en', 'de', 'fr', 'es', 'it', 'ru', 'zh-cn'];
+    surveyLocalization.supportedLocales = ['en', 'de', 'fr', 'es', 'it'];
 
     const creator = new SurveyCreatorModel({
       showSurveyHeader: false,
@@ -27,18 +27,6 @@ export class App {
       questionTypes: ["boolean", 'text', 'dropdown', 'checkbox', 'radiogroup', 'file'],
     });
 
-    creator.JSON = {
-      "locale": "de",
-      "elements": [
-        {
-          "type": "boolean",
-          "name": "question1",
-          "title": {
-            "de": "Magst du Fußball?"
-          }
-        }
-      ]
-    }
     creator.survey.locale = 'de';
 
     creator.onMachineTranslate.add((_, options) => {
