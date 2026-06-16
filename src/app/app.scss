@@ -1,0 +1,26 @@
+.toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
+
+  button {
+    padding: 6px 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+
+    &.active {
+      border-color: #19b394;
+      background: #e8f8f4;
+      font-weight: 600;
+    }
+  }
+}
+
+.main-view {
+  display: block;
+  height: calc(100vh - 49px);
+}
