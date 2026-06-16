@@ -1,8 +1,9 @@
 import { ChangeDetectorRef, Component, inject, OnInit, AfterViewInit } from '@angular/core';
-import { Model, settings, setupLocale, surveyLocalization } from 'survey-core';
+import { Model, settings, surveyLocalization } from 'survey-core';
 import { SurveyModule } from 'survey-angular-ui';
 import { SurveyCreatorModule } from 'survey-creator-angular';
 import { SurveyCreatorModel } from 'survey-creator-core';
+import { setupDefaultLocaleAutoTranslation } from './default-locale-translation';
 import 'survey-core/survey.i18n';
 import 'survey-creator-core/survey-creator-core.i18n';
 
@@ -21,7 +22,7 @@ export class App implements OnInit, AfterViewInit {
   surveyModel?: Model;
 
   constructor() {
-    this.setupCustomLocaleAsDefault();
+    settings.localization.defaultLocaleName = 'en';
     surveyLocalization.supportedLocales = ['en', 'de', 'fr', 'es', 'it'];
   }
 
@@ -31,36 +32,38 @@ export class App implements OnInit, AfterViewInit {
       showTranslationTab: true,
       showLogicTab: false,
       showJSONEditorTab: true,
-     // showPreviewTab: false,
       pageEditMode: 'single',
       questionTypes: ['boolean', 'text', 'dropdown', 'checkbox', 'radiogroup', 'file']
     });
 
+    setupDefaultLocaleAutoTranslation(creator);
+
     creator.onMachineTranslate.add((_, options) => {
+      const toLocale = options.toLocale || surveyLocalization.defaultLocale;
       options.callback(
-        options.strings.map((str) => `"${str}" from ${options.fromLocale} to  ${options.toLocale}`)
+        options.strings.map((str) => `"${str}" from ${options.fromLocale} to ${toLocale}`)
       );
     });
 
+    // German-speaking author works in German; English default texts are still empty.
     creator.JSON = {
-      "locale": "de",
-      "title": {
-        "en": "Some default title value in English"
+      locale: 'de',
+      title: {
+        de: 'Beispielumfrage'
       },
-      "elements": [
+      elements: [
         {
-          "type": "boolean",
-          "name": "question2",
-          "title": {
-            "en": "Some default value in English"
+          type: 'boolean',
+          name: 'question1',
+          title: {
+            de: 'Magst du Fußball?'
           }
         },
         {
-          "type": "boolean",
-          "name": "question1",
-          "title": {
-            "de": "Magst du Fußball?",
-            "en": "\"Magst du Fußball?\" from de to  en"
+          type: 'boolean',
+          name: 'question2',
+          title: {
+            de: 'Siehst du gern Sport im Fernsehen?'
           }
         }
       ]
@@ -72,14 +75,8 @@ export class App implements OnInit, AfterViewInit {
   }
 
   setView(view: AppView): void {
-    if (view === 'survey') {
-      surveyLocalization.defaultLocale = 'en';
-      settings.localization.defaultLocaleName = "en";
-      if (this.surveyCreatorModel) {
-        this.surveyModel = new Model(this.surveyCreatorModel.JSON);
-      }
-    } else {
-      surveyLocalization.defaultLocale = 'customlocale';
+    if (view === 'survey' && this.surveyCreatorModel) {
+      this.surveyModel = new Model(this.surveyCreatorModel.JSON);
     }
     this.activeView = view;
     this.cdr.detectChanges();
@@ -87,17 +84,5 @@ export class App implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.cdr.detectChanges();
-  }
-
-  private setupCustomLocaleAsDefault() {
-    setupLocale({
-      localeCode: 'customlocale',
-      strings: {},
-      nativeName: 'Custom Locale',
-      englishName: 'Custom Locale',
-      rtl: false
-    });
-
-    surveyLocalization.defaultLocale = 'customlocale';
   }
 }
