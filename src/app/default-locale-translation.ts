@@ -1,7 +1,13 @@
 import { Action, surveyLocalization } from 'survey-core';
-import { SurveyCreatorModel } from 'survey-creator-core';
+import { SurveyCreatorModel, TranslationEditor } from 'survey-creator-core';
 
 const DEFAULT_LOCALE_ROW_ACTION_ID = 'svc-translation-machine-default';
+
+type TranslationTabModel = {
+  survey: SurveyCreatorModel['survey'];
+  translationStringVisibilityCallback?: (obj: unknown, propertyName: string, visible: boolean) => boolean;
+  reset(): void;
+};
 
 /**
  * Survey Creator only adds the AI translate action to removable language rows.
@@ -47,9 +53,38 @@ export function setupDefaultLocaleAutoTranslation(creator: SurveyCreatorModel): 
 }
 
 function openDefaultLocaleTranslationEditor(creator: SurveyCreatorModel): void {
-  const model = (creator.getPlugin('translation', false) as unknown as { model?: { showTranslationEditor(locale: string): void } })?.model;
-  // Use the default locale code (e.g. "en"), not "". An empty edit locale is treated as
-  // falsy inside Survey Creator and breaks the dialog: extra columns appear and the
-  // target language is labeled incorrectly.
-  model?.showTranslationEditor(surveyLocalization.defaultLocale);
+  const translationModel = (creator.getPlugin('translation', false) as unknown as { model?: TranslationTabModel })?.model;
+  if (!translationModel) {
+    return;
+  }
+
+  const targetLocale = surveyLocalization.defaultLocale;
+  const editor = new TranslationEditor(
+    translationModel.survey,
+    targetLocale,
+    creator,
+    translationModel.translationStringVisibilityCallback
+  );
+  editor.onApply = () => {
+    translationModel.reset();
+  };
+
+  selectSurveyLocaleAsTranslationSource(editor, creator.survey.locale);
+  editor.showDialog();
+}
+
+function selectSurveyLocaleAsTranslationSource(editor: TranslationEditor, surveyLocale: string): void {
+  const targetLocale = surveyLocalization.defaultLocale;
+  if (!surveyLocale || surveyLocale === targetLocale || !editor.fromLocales.includes(surveyLocale)) {
+    return;
+  }
+
+  editor.setFromLocale(surveyLocale);
+
+  const fromLocaleAction = editor.translation.stringsHeaderSurvey?.navigationBar?.getActionById(
+    'svc-translation-fromlocale'
+  );
+  if (fromLocaleAction) {
+    fromLocaleAction.title = editor.translation.getLocaleName(surveyLocale);
+  }
 }
